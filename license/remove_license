@@ -1,0 +1,35 @@
+#!/bin/sh
+
+
+# 定义一个函数来处理恢复文件操作
+process_file() {
+  local dir="$1"
+  local file="$2"
+  local backup="$3"
+  local mode="$4"
+
+  cd "$dir" || exit
+
+  # 检查备份文件是否存在
+  if [ -e "./$backup" ]; then
+    rm "./$file"
+    mv "./$backup" "./$file"
+    chown MailPlus-Server:system "./$file"
+    chmod "$mode" "./$file"
+  else
+    echo "Error: Backup file $backup does not exist in $dir"
+  fi
+}
+
+
+/usr/syno/bin/synopkg stop MailPlus-Server
+sleep 5
+
+
+# 调用函数处理每个文件
+
+process_file /var/packages/MailPlus-Server/target/lib  libmailserver-license.so.1.0  libmailserver-license.so.1.0_backup       0755
+
+
+sleep 5
+/usr/syno/bin/synopkg stop MailPlus-Server
