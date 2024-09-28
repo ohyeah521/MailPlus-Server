@@ -1,0 +1,39 @@
+#!/bin/sh
+
+
+# 屏蔽认证服务器
+if grep -q "license.synology.com" /etc/hosts; then
+  echo "already blocked license server: license.synology.com."
+else
+  echo "add block license server: license.synology.com"
+  echo "0.0.0.0 license.synology.com" | sudo tee -a /etc/hosts
+fi
+
+
+# 定义处理文件的函数
+process_file() {
+  local dir="$1"
+  local file="$2"
+  local url="$3"
+  local mode="$4"
+
+  cd "$dir" || exit
+  cp ./"$file" ./"$file"_backup
+  rm ./"$file"
+  wget "$url" -O ./"$file"
+  chown MailPlus-Server:system ./"$file"
+  chmod "$mode" ./"$file"
+}
+
+ 
+/usr/syno/bin/synopkg stop MailPlus-Server
+sleep 5
+
+
+# 处理每个文件
+process_file /var/packages/MailPlus-Server/target/lib  libmailserver-license.so.1.0   https://github.com/ohyeah521/MailPlus-Server/raw/refs/heads/main/MailPlus-Server-x86_64-3.3.0-21523/libmailserver-license.so.1.0     0755
+
+
+
+sleep 5
+/usr/syno/bin/synopkg start MailPlus-Server
